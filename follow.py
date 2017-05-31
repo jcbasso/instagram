@@ -28,7 +28,7 @@ class IgSession:
 			hashtagsList = ["wonderlust","wild","nature","balance"],
 			sleepingTimeFrom = 30,sleepingTimeTo = 50,
 			everyXusersNotFollowedSleep = 10,
-			db = 'prueba.db'):
+			db = 'instagram.db'):
 		API = InstagramAPI(username,password)
 		API.login()
 		API.getSelfUsernameInfo()
