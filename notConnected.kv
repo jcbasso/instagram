@@ -1,0 +1,11 @@
+<NotConnected>:
+    BoxLayout:
+        orientation: 'vertical'
+
+        Label:
+            text: "Couldn't connect to server"
+            font_size: 32
+        Button:
+            text: "Retry"
+            font_size: 24
+            on_press: root.reconnect()

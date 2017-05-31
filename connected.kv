@@ -1,0 +1,28 @@
+<Connected>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: [10,50,10,50]
+        spacing: 30
+        Label:
+            text: "Things to do:"
+            font_size: 32
+        BoxLayout:
+            orientation: 'horizontal'
+            padding: [10,10,10,10]
+            Button:
+                text: "Update DB"
+                font_size: 24
+                on_press: root.update()
+            Button:
+                text: "Follow"
+                font_size: 24
+                on_press: root.follow()
+            Button:
+                text: "Unfollow"
+                font_size: 24
+                on_press: root.unfollow()
+
+        Button:
+            text: "Disconnect"
+            font_size: 24
+            on_press: root.disconnect()
