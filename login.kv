@@ -1,10 +1,17 @@
 #:include connected.kv
 
 <Login>:
+    canvas:
+        Color:
+            # #263238
+            rgb: 0x26 / 255.0, 0x32 / 255.0, 0x38 / 255.0
+
+        Rectangle:
+            size: self.size
     BoxLayout
         id: login_layout
         orientation: 'vertical'
-        padding: [10,50,10,50]
+        padding: [50,50,50,50]
         spacing: 50
 
         Label:
@@ -13,32 +20,29 @@
 
         BoxLayout:
             orientation: 'vertical'
-
-            Label:
-                text: 'Login'
-                font_size: 18
-                halign: 'left'
-                text_size: root.width-20, 20
+            spacing: 30
+            padding: [50,0,50,0]
 
             TextInput:
                 id: login
+                background_color: (0,0,0,0)
+                foreground_color: (1,1,1,1)
+                cursor_color: (1,1,1,1)
+                hint_text: 'Username'
                 multiline:False
                 font_size: 28
                 write_tab: False
                 multiline: False
                 on_text_validate: root.do_login(login.text,password.text)
 
-        BoxLayout:
-            orientation: 'vertical'
-            Label:
-                text: 'Password'
-                halign: 'left'
-                font_size: 18
-                text_size: root.width-20, 20
-
+        
             TextInput:
                 id: password
+                background_color: (0,0,0,0)
+                foreground_color: (1,1,1,1)
+                cursor_color: (1,1,1,1)
                 multiline:False
+                hint_text: 'Password'
                 password:True
                 font_size: 28
                 write_tab: False

@@ -1,11 +1,26 @@
 <Connected>:
+    canvas:
+        Color:
+            # #263238
+            rgb: 0x26 / 255.0, 0x32 / 255.0, 0x38 / 255.0
+
+        Rectangle:
+            size: self.size
     BoxLayout:
         orientation: 'vertical'
         padding: [10,50,10,50]
         spacing: 30
-        Label:
-            text: "Things to do:"
-            font_size: 32
+        BoxLayout:
+            orientation: 'horizontal'
+            padding: [30,30,30,30]
+            spacing: 15
+            AsyncImage:
+                id: image
+                source: 'profile_image.jpg'
+            Label:
+                text: "Things to do:"
+                font_size: 32
+        
         BoxLayout:
             orientation: 'horizontal'
             padding: [10,10,10,10]
@@ -21,6 +36,11 @@
                 text: "Unfollow"
                 font_size: 24
                 on_press: root.unfollow()
+
+        Button:
+            text: "Cancel request"
+            font_size: 24
+            on_press: root.cancel()
 
         Button:
             text: "Disconnect"

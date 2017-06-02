@@ -10,6 +10,7 @@ import time
 import csv
 import math
 import sqlite3
+import urllib
 from datetime import datetime, timedelta
 
 #TODO: read sleep time given in header of request
@@ -29,10 +30,10 @@ class IgSession:
 			sleepingTimeFrom = 30,sleepingTimeTo = 50,
 			everyXusersNotFollowedSleep = 10,
 			db = 'instagram.db'):
-		API = InstagramAPI(username,password)
-		API.login()
-		API.getSelfUsernameInfo()
-		self.user = (API.LastJson)["user"]
+		self.API = InstagramAPI(username,password)
+		self.API.login()
+		self.API.getSelfUsernameInfo()
+		self.user = (self.API.LastJson)["user"]
 		self.username = username
 		self.pk = self.user["pk"]
 		self.followerCount = self.user["follower_count"]
@@ -46,7 +47,6 @@ class IgSession:
 		self.sleepingTimeTo = sleepingTimeTo
 		self.conn = None
 		self.db = db
-		self.API = API
 		self.followingTable = "FOLLOWING_USERS"
 		self.followersTable = "FOLLOWERS_USERS"
 		self.followedTable = "USERS_FOLLOWED"
@@ -56,6 +56,8 @@ class IgSession:
 		self.followAction = 'FOLLOW'
 		self.unfollowAction = 'UNFOLLOW'
 		self.maxUsersToFollow = maxUsersToFollow
+		self.profilePicUrl = self.user['profile_pic_url']
+		urllib.urlretrieve(self.profilePicUrl, "profile_image.jpg")
 		self.createTables()
 
 	def createTables(self):
@@ -169,11 +171,11 @@ class IgSession:
 		cur.execute(query)
 		return cur
 
-	def updateDb(self):
-		self.updateFollowersDb()
-		self.updateFollowingDb()
+	def updateDb(self,cancelar):
+		self.updateFollowersDb(cancelar)
+		self.updateFollowingDb(cancelar)
 
-	def updateFollowingDb(self):
+	def updateFollowingDb(self,cancelar):
 		self.connectToDb()
 		c = 0
 	 	nextMaxId = ''
@@ -182,10 +184,15 @@ class IgSession:
 		self.deleteTable(self.followingTable)
 		self.createTable(self.followingTable)
 		while c < self.followingCount and moreUsers:
+			if cancelar[0]:
+				cancelar[0]=False
+				break
 			self.API.getUserFollowings(self.pk,nextMaxId)
 			followingJson = self.API.LastJson
 			allUsers = followingJson["users"]
 			for user in allUsers:
+				if cancelar[0]:
+					break
 				userId = str(user["pk"])
 				userUsername = user["username"]
 				userFullName = user["full_name"].replace("'","''")
@@ -197,7 +204,7 @@ class IgSession:
 				moreUsers = False
 		self.closeDbConnection()
 
-	def updateFollowersDb(self):
+	def updateFollowersDb(self,cancelar):
 		self.connectToDb()
 		c = 0
 	 	nextMaxId = ''
@@ -205,10 +212,14 @@ class IgSession:
 		self.deleteTable(self.followersTable)
 		self.createTable(self.followersTable)
 		while c < self.followerCount and moreUsers:
+			if cancelar[0]:
+				break
 			self.API.getUserFollowers(self.pk,nextMaxId)
 			followersJson = self.API.LastJson
 			allUsers = followersJson["users"]
 			for user in allUsers:
+				if cancelar[0]:
+					break
 				userId = str(user["pk"])
 				userUsername = user["username"]
 				userFullName = user["full_name"].replace("'","''")
@@ -220,7 +231,7 @@ class IgSession:
 				moreUsers = False
 		self.closeDbConnection()
 
-	def followBot(self):
+	def followBot(self,cancelar):
 		self.connectToDb()
 		self.createTable(self.followedTable)
 		self.API.getHashtagFeed(self.hashtag)
@@ -231,6 +242,9 @@ class IgSession:
 		i = 0
 
 		while follows < self.maxFollows:
+			if cancelar[0]:
+				cancelar[0]=False
+				break
 			
 			# Agarro items
 			if first:
@@ -291,6 +305,38 @@ class IgSession:
 						print "Already followed"
 		self.closeDbConnection()
 
+	def followByLocation(self,locationString):
+		self.API.searchLocation(locationString)
+		suggestedLocations = self.API.LastJson
+		nextMaxId = ''
+		contador = 0
+		self.connectToDb()
+		for location in suggestedLocations['items']:
+			locationId = location['location']['pk']
+			self.API.getLocationFeed(locationId,nextMaxId)
+			locationFeed = self.API.LastJson
+			try:
+				items = locationFeed['ranked_items']
+			except:
+				items = locationFeed['items']
+			for item in items:
+				contador += 1
+				# Hacer cosas aca
+				# print json.dumps(item,indent=4)
+				mediaId = item['pk']
+				userId = item['user']['pk']
+				username = item['user']['username']
+				fullName = item['user']['full_name'].replace("'","''")
+				reasonLike = 'Liking by location: %s' % (location['location']['name'])
+				self.like(mediaId,username,fullName,reasonLike)
+				reasonFollow = 'Following by location: %s' % (location['location']['name'])
+				self.follow(userId, username, fullName, reasonFollow)
+			try:
+				nextMaxId = locationFeed['next_max_id']
+			except:
+				self.closeDbConnection()
+				break
+
 	def stealUserFollowers(self,usernameFromWhomSteal):
 		self.API.searchUsername(usernameFromWhomSteal)
 		hisPk = self.API.LastJson['user']['pk']
@@ -323,13 +369,16 @@ class IgSession:
 			if self.maxUsersToFollow == followed:
 				break
 
-	def unfollowBot(self,days=2):
+	def unfollowBot(self,cancelar,days=2):
 		self.connectToDb()
 		today = datetime.now()
 		limitDate = (today - timedelta(days)).strftime("%Y-%m-%d %H:%M:%S")
 		query = "SELECT USERNAME,USER_ID,FULL_NAME FROM %s WHERE USERNAME IN (SELECT USERNAME FROM %s WHERE DATE_FOLLOWED < \'%s\') AND USERNAME NOT IN (SELECT USERNAME FROM %s)" % (self.followingTable,self.followedTable,limitDate,self.whitelistTable)
 		cur = self.cursorExecute(query)
 		for userUsername,userId,fullName in cur:
+			if cancelar[0]:
+				cancelar[0]=False
+				break
 			print userUsername + " is not following me and not in whitelist, now unfollowing him"
 			self.unfollow(userId,userUsername,fullName.replace("'","''"))
 				
@@ -345,13 +394,3 @@ class IgSession:
 	def logout(self):
 		return self.API.logout()
 ########################################
-
-# session = IgSession("USERNAME","PASSWORD",maxUsersToFollow=50)
-# session.logout()
-#session.updateDb()
-#session.unfollowBot(0)
-#session.stealUserFollowers('OTHERUSERNAME')
-#session.API.getHashtagFeed(session.hashtag)
-#session.followBot()
-#mediaId = session.API.LastJson["ranked_items"][0]["pk"]
-#session.followMediaLikers(mediaId)

@@ -8,10 +8,16 @@ import sys
 
 from connected import Connected
 from notConnected import NotConnected
+import atexit
 
 class Login(Screen):
     def logging(self,username,password):
+        app = App.get_running_app()
         self.session = IgSession(username,password)
+        app.profilePicUrl = self.session.profilePicUrl
+        print app.profilePicUrl
+        # print Connected.ids
+        app.session = self.session
         self.manager.transition = SlideTransition(direction="left")
         self.manager.current = 'connected'
 
@@ -33,6 +39,7 @@ class Login(Screen):
 class LoginApp(App):
     username = StringProperty(None)
     password = StringProperty(None)
+    profilePicUrl = StringProperty(None)
 
     def build(self):
         manager = ScreenManager()

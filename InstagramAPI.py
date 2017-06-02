@@ -716,11 +716,15 @@ class InstagramAPI:
                     self.LastJson = json.loads(response.text)
                 except:
                     pass
-                if response.status_code != 429:
-                    return False
-                else:
+                if ( response.status_code == 429 ) :
                     print "Retrying"
                     time.sleep(1)
+                elif ( response.status_code == 400) :
+                    print "Username and password didn't work"
+                    return False
+                else:
+                    return False
+
         
     def getTotalFollowers(self,usernameId):
         followers = []
