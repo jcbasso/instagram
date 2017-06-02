@@ -1,1 +1,10 @@
+.idea/
 .DS_Store
+ImageUtils.pyc
+InstagramAPI.pyc
+connected.pyc
+follow.pyc
+instagram.db
+login.ini
+notConnected.pyc
+profile_image.jpg
