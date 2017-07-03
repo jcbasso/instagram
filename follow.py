@@ -348,11 +348,17 @@ class IgSession:
 			search = self.API.LastJson
 			hisFollowers = search['users']
 			for user in hisFollowers:
-				status = self.follow(user['pk'],user['username'],user['full_name'].replace("'","''"))
-				if status:
-					followed += 1
-				if followed >= self.maxUsersToFollow:
-					break
+				self.API.searchUsername(user['username'])
+				userFollowers = (self.API.LastJson)['user']['follower_count']
+				if userFollowers >= 200:
+					print "Following %s. Follow #%d" % (user['username'],followed)
+					status = self.follow(user['pk'],user['username'],user['full_name'].replace("'","''"))
+					if status:
+						followed += 1
+					if followed >= self.maxUsersToFollow:
+						break
+				else:
+					print "Not enough followers (user followers: %s)" % (userFollowers)
 			try:
 				nextMaxId = search['next_max_id']
 			except:
@@ -373,7 +379,7 @@ class IgSession:
 		self.connectToDb()
 		today = datetime.now()
 		limitDate = (today - timedelta(days)).strftime("%Y-%m-%d %H:%M:%S")
-		query = "SELECT USERNAME,USER_ID,FULL_NAME FROM %s WHERE USERNAME IN (SELECT USERNAME FROM %s WHERE DATE_FOLLOWED < \'%s\') AND USERNAME NOT IN (SELECT USERNAME FROM %s)" % (self.followingTable,self.followedTable,limitDate,self.whitelistTable)
+		query = "SELECT USERNAME,USER_ID,FULL_NAME FROM %s WHERE USERNAME IN (SELECT USERNAME FROM %s WHERE DATE_CREATED < \'%s\') AND USERNAME NOT IN (SELECT USERNAME FROM %s)" % (self.followingTable,self.followedTable,limitDate,self.whitelistTable)
 		cur = self.cursorExecute(query)
 		for userUsername,userId,fullName in cur:
 			if cancelar[0]:
