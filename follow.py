@@ -165,7 +165,7 @@ class IgSession:
 			print query
 			self.execute(query)
 		except:
-			query = 'INSERT OR IGNORE INTO %s (USER_ID,USERNAME) VALUES (%s,\'%s\',\'%s\')' % (table,userId,username)
+			query = 'INSERT OR IGNORE INTO %s (USER_ID,USERNAME) VALUES (%s,\'%s\')' % (table,userId,username)
 			print query
 			self.execute(query)
 		
@@ -176,7 +176,7 @@ class IgSession:
 			print query
 			self.execute(query)
 		except:
-			query = 'INSERT INTO %s (IG_ACTION,REASON,USERNAME,ITEM_ID) VALUES (\'%s\',\'%s\',\'%s\',%s,\'%s\')' % (self.logTable,action,reason,username,itemId)
+			query = 'INSERT INTO %s (IG_ACTION,REASON,USERNAME,ITEM_ID) VALUES (\'%s\',\'%s\',\'%s\',%s)' % (self.logTable,action,reason,username,itemId)
 			print query
 			self.execute(query)
 
