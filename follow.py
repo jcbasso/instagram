@@ -162,18 +162,23 @@ class IgSession:
 	def insertUser(self,table,username,userId,fullName):
 		try:
 			query = 'INSERT OR IGNORE INTO %s (USER_ID,USERNAME,FULL_NAME) VALUES (%s,\'%s\',\'%s\')' % (table,userId,username,fullName)
+			print query
+			self.execute(query)
 		except:
 			query = 'INSERT OR IGNORE INTO %s (USER_ID,USERNAME) VALUES (%s,\'%s\',\'%s\')' % (table,userId,username)
-		print query
-		self.execute(query)
+			print query
+			self.execute(query)
+		
 
 	def insertLogUser(self,action,reason,username,itemId,fullName):
 		try:
 			query = 'INSERT INTO %s (IG_ACTION,REASON,USERNAME,ITEM_ID,FULL_NAME) VALUES (\'%s\',\'%s\',\'%s\',%s,\'%s\')' % (self.logTable,action,reason,username,itemId,fullName)
+			print query
+			self.execute(query)
 		except:
 			query = 'INSERT INTO %s (IG_ACTION,REASON,USERNAME,ITEM_ID) VALUES (\'%s\',\'%s\',\'%s\',%s,\'%s\')' % (self.logTable,action,reason,username,itemId)
-		print query
-		self.execute(query)
+			print query
+			self.execute(query)
 
 	def deleteUserBy(self,table,column,valueOfColumn):
 		query = 'DELETE FROM %s WHERE %s=%s' % (table,column,valueOfColumn)
