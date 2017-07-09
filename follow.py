@@ -12,6 +12,7 @@ import math
 import sqlite3
 import urllib
 from datetime import datetime, timedelta
+from PIL import Image, ImageOps, ImageDraw
 
 #TODO: read sleep time given in header of request
 #TODO: tablas logs, history que guardara todos los followers y followed
@@ -57,8 +58,23 @@ class IgSession:
 		self.unfollowAction = 'UNFOLLOW'
 		self.maxUsersToFollow = maxUsersToFollow
 		self.profilePicUrl = self.user['profile_pic_url']
-		urllib.urlretrieve(self.profilePicUrl, "profile_image.jpg")
+		
+		self.roundProfilePic()
 		self.createTables()
+
+	def roundProfilePic(self):
+		urllib.urlretrieve(self.profilePicUrl, "profile_image.jpg")
+		im = Image.open('profile_image.jpg')
+		im = im.resize((120, 120));
+		bigsize = (im.size[0] * 3, im.size[1] * 3)
+		mask = Image.new('L', bigsize, 0)
+		draw = ImageDraw.Draw(mask) 
+		draw.ellipse((0, 0) + bigsize, fill=255)
+		mask = mask.resize(im.size, Image.ANTIALIAS)
+		im.putalpha(mask)
+		output = ImageOps.fit(im, mask.size, centering=(0.5, 0.5))
+		output.putalpha(mask)
+		output.save('profile_pic_rounded.png')
 
 	def createTables(self):
 		self.connectToDb()
@@ -144,12 +160,18 @@ class IgSession:
 
 	#Prerequisito: Estar conectado a la base de datos, asi no hay que conectarse cada vez a la base
 	def insertUser(self,table,username,userId,fullName):
-		query = 'INSERT OR IGNORE INTO %s (USER_ID,USERNAME,FULL_NAME) VALUES (%s,\'%s\',\'%s\')' % (table,userId,username,fullName)
+		try:
+			query = 'INSERT OR IGNORE INTO %s (USER_ID,USERNAME,FULL_NAME) VALUES (%s,\'%s\',\'%s\')' % (table,userId,username,fullName)
+		except:
+			query = 'INSERT OR IGNORE INTO %s (USER_ID,USERNAME) VALUES (%s,\'%s\',\'%s\')' % (table,userId,username)
 		print query
 		self.execute(query)
 
 	def insertLogUser(self,action,reason,username,itemId,fullName):
-		query = 'INSERT INTO %s (IG_ACTION,REASON,USERNAME,ITEM_ID,FULL_NAME) VALUES (\'%s\',\'%s\',\'%s\',%s,\'%s\')' % (self.logTable,action,reason,username,itemId,fullName)
+		try:
+			query = 'INSERT INTO %s (IG_ACTION,REASON,USERNAME,ITEM_ID,FULL_NAME) VALUES (\'%s\',\'%s\',\'%s\',%s,\'%s\')' % (self.logTable,action,reason,username,itemId,fullName)
+		except:
+			query = 'INSERT INTO %s (IG_ACTION,REASON,USERNAME,ITEM_ID) VALUES (\'%s\',\'%s\',\'%s\',%s,\'%s\')' % (self.logTable,action,reason,username,itemId)
 		print query
 		self.execute(query)
 
